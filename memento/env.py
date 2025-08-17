@@ -4,15 +4,13 @@ import os
 load_dotenv()  # take environment variables from .env.
 
 
-SUPABASE_URL=os.getenv("SUPABASE_URL", None)
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", None)
-LANGSMITH_API_KEY=os.getenv("LANGSMITH_API_KEY", None)
-REDIS_URI=os.getenv("REDIS_URI", None)
-DATABASE_URI=os.getenv("DATABASE_URI", None)
+POSTGRES_URL=os.getenv("POSTGRES_URL", None)
+OPENAI_API_BASE_URL=os.getenv("OPENAI_API_BASE_URL", None)
+OPENAI_MODEL=os.getenv("OPENAI_MODEL", None)
 
 
 required_env_vars = [
-    "SUPABASE_URL",
     "OPENAI_API_KEY",
 ]
 

@@ -6,8 +6,9 @@ from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
-from scout.tools import query_db, generate_visualization
-from scout.prompts import prompts
+from memento.tools import table_searcher, sql_checker, sql_runner
+from memento.prompts import prompts
+from memento import env
 
 
 class  ScoutState(BaseModel):
@@ -29,8 +30,8 @@ class Agent:
     def __init__(
             self, 
             name: str, 
-            tools: List = [query_db, generate_visualization],
-            model: str = "gpt-4.1-mini-2025-04-14", 
+            tools: List = [],
+            model: str = None, 
             system_prompt: str = "You are a helpful assistant.",
             temperature: float = 0.1
             ):
@@ -42,7 +43,9 @@ class Agent:
         
         self.llm = ChatOpenAI(
             model=self.model,
-            temperature=self.temperature
+            temperature=self.temperature,
+            api_key=env.OPENAI_API_KEY,
+            base_url=env.OPENAI_API_BASE_URL
             ).bind_tools(self.tools)
         
         self.runnable = self.build_graph()
@@ -58,26 +61,48 @@ class Agent:
                 state.messages
                 )
             state.messages = state.messages + [response]
+            print(f"Scout node response: {response}")
             return state
         
-        def router(state: ScoutState) -> str:
+        def chatbot_router(state: ScoutState) -> str:
+            """Route from chatbot to specific tools"""
             last_message = state.messages[-1]
+
             if not last_message.tool_calls:
                 return END
+
+            tool_call = last_message.tool_calls[0]
+            tool_name = tool_call["name"]
+
+            if tool_name == "table_searcher":
+                return "table_search_node"
+            elif tool_name == "sql_checker":
+                return "sql_check_node"
+            elif tool_name == "sql_runner":
+                return "sql_runner_node"
             else:
-                return "tools"
+                return END
+
+
+        table_searcher_tool = [tool for tool in self.tools if tool.name == 'table_searcher'][0]
+        sql_checker_tool = [tool for tool in self.tools if tool.name == 'sql_checker'][0]
+        sql_runner_tool = [tool for tool in self.tools if tool.name == 'sql_runner'][0]
 
         builder = StateGraph(ScoutState)
 
+        # Add nodes
         builder.add_node("chatbot", scout_node)
-        builder.add_node("tools", ToolNode(self.tools))
+        builder.add_node("table_search_node", ToolNode([table_searcher_tool]))
+        builder.add_node("sql_check_node", ToolNode([sql_checker_tool]))
+        builder.add_node("sql_runner_node", ToolNode([sql_runner_tool]))
 
         builder.add_edge(START, "chatbot")
-        builder.add_conditional_edges("chatbot", router, ["tools", END])
-        builder.add_edge("tools", "chatbot")
+        builder.add_conditional_edges("chatbot",chatbot_router,["table_search_node","sql_check_node","sql_runner_node",END])
+        builder.add_edge("table_search_node", "chatbot")
+        builder.add_edge("sql_check_node", "chatbot")
+        builder.add_edge("sql_runner_node", "chatbot")
 
         return builder.compile(checkpointer=MemorySaver())
-    
 
     def inspect_graph(self):
         """
@@ -138,7 +163,8 @@ class Agent:
 
                     
                     if tool_name:
-                        tool_call_str = f"\n\n< TOOL CALL: {tool_name} >\n\n"
+                        tool_call_str = f"\n\n< TOOL CALL: {tool_name} >\nArgs: {args}\n\n"
+                    yield tool_call_str
 
                     if args:
                         tool_call_str = args
@@ -151,6 +177,21 @@ class Agent:
 # Define and instantiate the agent 
 agent = Agent(
         name="Scout",
-        system_prompt=prompts.scout_system_prompt
+        system_prompt=prompts.scout_system_prompt,
+        tools=[table_searcher, sql_checker, sql_runner],
+        model=env.OPENAI_MODEL
         )
 graph = agent.build_graph()
+
+try:
+    # Get mermaid diagram as text
+    mermaid_code = graph.get_graph().draw_mermaid()
+    print("=== Graph Mermaid Diagram ===")
+    print(mermaid_code)
+    print("\n" + "="*50)
+    print("Copy the above code to https://mermaid.live to visualize")
+except Exception as e:
+    print(f"Could not generate mermaid diagram: {e}")
+
+
+print(f'graph', graph)
