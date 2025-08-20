@@ -1,8 +1,7 @@
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # take environment variables from .env.
-
+load_dotenv() 
 
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY", None)
 POSTGRES_URL=os.getenv("POSTGRES_URL", None)

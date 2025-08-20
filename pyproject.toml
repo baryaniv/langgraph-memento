@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["scout"]
+packages = ["memento"]
 
 [dependency-groups]
 dev = [

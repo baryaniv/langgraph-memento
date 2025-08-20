@@ -4,13 +4,13 @@ Tools for the agent to use.
 from langchain_core.tools import tool
 from sqlalchemy import create_engine, text, Engine
 import pandas as pd
-from memento import env
+from .. import env
 from langgraph.types import Command
 from langchain_core.tools.base import InjectedToolCallId
 from typing import Annotated
 from langchain_core.messages import ToolMessage
-from .databases.pg import PG
-from .databases.vector import Vector
+from ..databases.pg import PG
+from ..databases.vector import Vector
 
 class ServerSession:
     """A session for server-side state management and operations. 
@@ -102,7 +102,7 @@ def table_searcher(query: str) -> list:
 @tool
 def sql_checker(query: str) -> bool:
     """
-    Simple SQL query validator - checks syntax and executes with LIMIT 1.
+    Simple SQL query validator - checks syntax and executes.
     
     Args:
         query: SQL query to validate
@@ -125,7 +125,7 @@ def sql_checker(query: str) -> bool:
         test_query = f"{query.rstrip(';')} LIMIT 1;"
         
         with pg_instance.connection.begin():
-            result = pg_instance.connection.execute(text(test_query))
+            result = pg_instance.connection.execute(statement=text(test_query))
             row = result.fetchone()
             
             return True

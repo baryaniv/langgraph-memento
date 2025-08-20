@@ -16,12 +16,6 @@ class Vector:
 
         super().__init__()
 
-        # self.user = os.environ.get("POSTGRES_USER", "postgres")
-        # self.password = os.environ["POSTGRES_PASSWORD"]
-        # self.host = os.environ.get("POSTGRES_HOSTNAME", "postgres")
-        # self.port = os.environ.get("POSTGRES_PORT", 54321)
-        # self.database = os.environ.get("POSTGRES_DATABASE", "postgres")
-        # auth = f"{self.user}:{self.password}"
         self.uri = env.POSTGRES_URL
         collection_name = "my_docs"
 

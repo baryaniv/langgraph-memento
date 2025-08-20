@@ -8,8 +8,7 @@ import asyncio
 from contextlib import asynccontextmanager
 import uvicorn
 
-# Import your agent
-from memento.graph import agent
+from .agent.graph import agent
 
 # Pydantic models for request/response
 class ChatRequest(BaseModel):
@@ -43,8 +42,8 @@ async def lifespan(app: FastAPI):
     print("🔄 Shutting down...")
 
 app = FastAPI(
-    title="Scout Agent API",
-    description="FastAPI deployment for the Scout Agent with table search and SQL generation capabilities",
+    title="Memento Agent API",
+    description="FastAPI deployment for the Memento Agent with table search and SQL generation capabilities",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -62,7 +61,7 @@ app.add_middleware(
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "Scout Agent API is running!",
+        "message": "Memento Agent API is running!",
         "endpoints": {
             "chat": "/chat - POST request to chat with the agent",
             "stream": "/stream - POST request for streaming chat",
@@ -88,7 +87,7 @@ async def health_check():
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Chat with the Scout agent
+    Chat with the Memento agent
     
     - **message**: The user's message
     - **thread_id**: Optional thread ID for conversation continuity (default: "default")
@@ -115,8 +114,8 @@ async def chat(request: ChatRequest):
 @app.post("/stream")
 async def stream_chat(request: StreamChatRequest):
     """
-    Stream chat with the Scout agent
-    
+    Stream chat with the Memento agent
+
     - **message**: The user's message
     - **thread_id**: Optional thread ID for conversation continuity (default: "default")
     """
@@ -213,7 +212,7 @@ async def reset_conversation(thread_id: str = "default"):
     }
 
 if __name__ == "__main__":
-    print("🚀 Starting Scout Agent API...")
+    print("🚀 Starting Memento Agent API...")
     print("📊 Graph visualization available at: http://localhost:8000/graph")
     print("💬 Chat endpoint available at: http://localhost:8000/chat")
     print("🌊 Streaming chat available at: http://localhost:8000/stream")

@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Configure the page
 st.set_page_config(
-    page_title="Scout Agent Chat",
+    page_title="Memento Agent Chat",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -121,7 +121,7 @@ def get_tools_info():
 
 # Sidebar
 with st.sidebar:
-    st.title("🤖 Scout Agent")
+    st.title("🤖 Memento Agent")
     
     # Health status
     health = get_health_status()
@@ -184,7 +184,7 @@ with st.sidebar:
             st.write("No tools information available")
 
 # Main chat interface
-st.title("💬 Chat with Scout Agent")
+st.title("💬 Chat with Memento Agent")
 
 # Display chat messages
 for message in st.session_state.messages:
@@ -253,7 +253,7 @@ with col2:
         st.download_button(
             label="Download Chat JSON",
             data=json.dumps(chat_export, indent=2),
-            file_name=f"scout_chat_{st.session_state.thread_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            file_name=f"memento_chat_{st.session_state.thread_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
             mime="application/json"
         )
 

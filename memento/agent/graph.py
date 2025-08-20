@@ -6,12 +6,12 @@ from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
-from memento.tools import table_searcher, sql_checker, sql_runner
-from memento.prompts import prompts
-from memento import env
+from .tools import table_searcher, sql_checker, sql_runner
+from ..prompts import prompts
+from .. import env
 
 
-class  ScoutState(BaseModel):
+class  MementoState(BaseModel):
     messages: Annotated[List[BaseMessage], add_messages] = []
     chart_json: str = ""
 
@@ -55,16 +55,16 @@ class Agent:
         """
         Build the LangGraph application.
         """
-        def scout_node(state: ScoutState) -> ScoutState:
+        def memento_node(state: MementoState) -> MementoState:
             response = self.llm.invoke(
                 [SystemMessage(content=self.system_prompt)] +
                 state.messages
                 )
             state.messages = state.messages + [response]
-            print(f"Scout node response: {response}")
+            print(f"Memento node response: {response}")
             return state
         
-        def chatbot_router(state: ScoutState) -> str:
+        def chatbot_router(state: MementoState) -> str:
             """Route from chatbot to specific tools"""
             last_message = state.messages[-1]
 
@@ -88,10 +88,10 @@ class Agent:
         sql_checker_tool = [tool for tool in self.tools if tool.name == 'sql_checker'][0]
         sql_runner_tool = [tool for tool in self.tools if tool.name == 'sql_runner'][0]
 
-        builder = StateGraph(ScoutState)
+        builder = StateGraph(MementoState)
 
         # Add nodes
-        builder.add_node("chatbot", scout_node)
+        builder.add_node("chatbot", memento_node)
         builder.add_node("table_search_node", ToolNode([table_searcher_tool]))
         builder.add_node("sql_check_node", ToolNode([sql_checker_tool]))
         builder.add_node("sql_runner_node", ToolNode([sql_runner_tool]))
@@ -176,8 +176,8 @@ class Agent:
 
 # Define and instantiate the agent 
 agent = Agent(
-        name="Scout",
-        system_prompt=prompts.scout_system_prompt,
+        name="Memento",
+        system_prompt=prompts.memento_system_prompt,
         tools=[table_searcher, sql_checker, sql_runner],
         model=env.OPENAI_MODEL
         )
